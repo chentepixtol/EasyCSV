@@ -19,11 +19,6 @@ class ReaderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(5, count($this->getReader()->getAll()));
     }
 
-    public function testOthet(){
-        $reader  = $this->getReader();
-        print_r($reader->getAll());die();
-    }
-
     /**
      * @test
      */
