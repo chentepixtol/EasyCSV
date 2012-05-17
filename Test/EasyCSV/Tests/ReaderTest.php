@@ -10,13 +10,18 @@ class ReaderTest extends \PHPUnit_Framework_TestCase
         $reader  = $this->getReader();
         while($row = $reader->getRow()) {
             $this->assertTrue(is_array($row));
-            $this->assertEquals(3, count($row));
+            $this->assertEquals(4, count($row));
         }
     }
 
     public function testGetAll()
     {
         $this->assertEquals(5, count($this->getReader()->getAll()));
+    }
+
+    public function testOthet(){
+        $reader  = $this->getReader();
+        print_r($reader->getAll());die();
     }
 
     /**
@@ -32,7 +37,7 @@ class ReaderTest extends \PHPUnit_Framework_TestCase
             $line++;
             $rowsWhile[] = $row;
 
-            $this->assertEquals(array("column1", "column2", "column3"), array_keys($row));
+            $this->assertEquals(array("column1", "column2", "column3", 'column4'), array_keys($row));
             $this->assertEquals($line, $iterator->key());
 
             $iterator->next();
@@ -45,7 +50,7 @@ class ReaderTest extends \PHPUnit_Framework_TestCase
         foreach($iterator as $key => $row){
             $line++;
             $rowsFor[] = $row;
-            $this->assertEquals(array("column1", "column2", "column3"), array_keys($row));
+            $this->assertEquals(array("column1", "column2", "column3", 'column4'), array_keys($row));
             $this->assertEquals($line, $key);
         }
 

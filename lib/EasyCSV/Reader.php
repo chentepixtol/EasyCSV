@@ -55,12 +55,28 @@ class Reader extends AbstractBase implements \Iterator
         if( ($row = $this->fgetcsv()) !== false ) {
             $this->isValid = true;
             $this->_line++;
-            $this->currentRow = $this->_headers ? array_combine($this->_headers, $row) : $row;
+            $this->currentRow = $this->getCombineRow($row);
             return $this->currentRow;
         } else {
             $this->isValid = false;
             return $this->isValid;
         }
+    }
+
+    /**
+     *
+     * @param array $row
+     */
+    private function getCombineRow($row){
+        $newRow = array();
+        foreach( $this->_headers as $i => $name ){
+            if( !isset($row[$i]) ){
+                $newRow[$i] = null;
+            }else{
+                $newRow[$i] = $row[$i];
+            }
+        }
+        return array_combine($this->_headers, $newRow);
     }
 
     /**
