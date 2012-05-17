@@ -21,6 +21,9 @@ class Reader extends AbstractBase implements \Iterator
         $this->currentRow = null;
         $this->_headers = $this->fgetcsv();
         $this->isValid = $this->_headers !== false;
+        if( is_array($this->_headers) ){
+            $this->_headers = array_map('strtolower', $this->_headers);
+        }
         $this->_line = 1;
     }
 
