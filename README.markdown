@@ -2,6 +2,8 @@
 
 Set of PHP 5.3 classes for reading and writing CSV files.
 
+[![Build Status](https://secure.travis-ci.org/chentepixtol/EasyCSV.png?branch=master)](http://travis-ci.org/chentepixtol/EasyCSV)
+
 ## Reader
 
 To read CSV files we need to instantiate the EasyCSV reader class:

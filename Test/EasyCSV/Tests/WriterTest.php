@@ -2,15 +2,13 @@
 
 namespace EasyCSV\Tests;
 
-require_once __DIR__ . '/TestInit.php';
-
 class WriterTest extends \PHPUnit_Framework_TestCase
 {
     private $_writer;
 
     public function setUp()
     {
-        $this->_writer = new \EasyCSV\Writer(__DIR__ . '/write.csv');
+        $this->_writer = new \EasyCSV\Writer(__DIR__ . '/mocks/write.csv');
     }
 
     public function testWriteRow()
@@ -29,7 +27,7 @@ class WriterTest extends \PHPUnit_Framework_TestCase
 
     public function testReadWrittenFile()
     {
-        $reader = new \EasyCSV\Reader(__DIR__ . '/write.csv');
+        $reader = new \EasyCSV\Reader(__DIR__ . '/mocks/write.csv');
         $results = $reader->getAll();
         $expected = array(
             array(
