@@ -2,9 +2,18 @@
 
 namespace EasyCSV;
 
+/**
+ *
+ * @author chente
+ */
 class Writer extends AbstractBase
 {
 
+    /**
+     *
+     * @param string $path
+     * @param string $mode
+     */
     public function __construct($path, $mode = 'r+'){
         if ( ! file_exists($path)) {
             touch($path);
@@ -12,6 +21,11 @@ class Writer extends AbstractBase
         parent::__construct($path, $mode);
     }
 
+    /**
+     *
+     * @param array $row
+     * @return number
+     */
     public function writeRow($row)
     {
         if (is_string($row)) {
@@ -21,11 +35,16 @@ class Writer extends AbstractBase
         return fputcsv($this->_handle, $row, $this->_delimiter, $this->_enclosure);
     }
 
+    /**
+     *
+     * @param array $array
+     */
     public function writeFromArray(array $array)
     {
         foreach ($array as $key => $value) {
             $this->writeRow($value);
         }
     }
+
 
 }
