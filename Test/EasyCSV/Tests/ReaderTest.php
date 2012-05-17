@@ -5,16 +5,10 @@ namespace EasyCSV\Tests;
 
 class ReaderTest extends \PHPUnit_Framework_TestCase
 {
-    private $_reader;
-
-    public function setUp()
-    {
-        $this->_reader = new \EasyCSV\Reader(__DIR__ . '/mocks/read.csv');
-    }
-
     public function testOneAtAtime()
     {
-        while($row = $this->_reader->getRow()) {
+        $reader  = $this->getReader();
+        while($row = $reader->getRow()) {
             $this->assertTrue(is_array($row));
             $this->assertEquals(3, count($row));
         }
@@ -22,6 +16,46 @@ class ReaderTest extends \PHPUnit_Framework_TestCase
 
     public function testGetAll()
     {
-        $this->assertEquals(5, count($this->_reader->getAll()));
+        $this->assertEquals(5, count($this->getReader()->getAll()));
+    }
+
+    /**
+     * @test
+     */
+    public function iterator()
+    {
+        $iterator = $this->getReader();
+        $rowsWhile = array();
+        $line = 1;
+        while( $iterator->valid() ) {
+            $row = $iterator->current();
+            $line++;
+            $rowsWhile[] = $row;
+
+            $this->assertEquals(array("column1", "column2", "column3"), array_keys($row));
+            $this->assertEquals($line, $iterator->key());
+
+            $iterator->next();
+        }
+        $iterator->rewind();
+
+        $this->assertEquals(1, $iterator->getLineNumber());
+        $rowsFor = array();
+        $line = 1;
+        foreach($iterator as $key => $row){
+            $line++;
+            $rowsFor[] = $row;
+            $this->assertEquals(array("column1", "column2", "column3"), array_keys($row));
+            $this->assertEquals($line, $key);
+        }
+
+        $this->assertEquals($rowsWhile, $rowsFor);
+    }
+
+    /**
+     * @return \EasyCSV\Reader
+     */
+    private function getReader(){
+        return new \EasyCSV\Reader(__DIR__ . '/mocks/read.csv');
     }
 }

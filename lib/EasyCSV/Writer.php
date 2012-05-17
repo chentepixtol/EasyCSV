@@ -4,6 +4,14 @@ namespace EasyCSV;
 
 class Writer extends AbstractBase
 {
+
+    public function __construct($path, $mode = 'r+'){
+        if ( ! file_exists($path)) {
+            touch($path);
+        }
+        parent::__construct($path, $mode);
+    }
+
     public function writeRow($row)
     {
         if (is_string($row)) {
@@ -19,4 +27,5 @@ class Writer extends AbstractBase
             $this->writeRow($value);
         }
     }
+
 }

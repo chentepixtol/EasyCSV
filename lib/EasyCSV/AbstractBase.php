@@ -7,19 +7,28 @@ abstract class AbstractBase
     protected $_handle;
     protected $_delimiter = ',';
     protected $_enclosure = '"';
+    protected $_path;
+    protected $_mode;
 
     public function __construct($path, $mode = 'r+')
     {
-        if ( ! file_exists($path)) {
-            touch($path);
-        }
-        $this->_handle = fopen($path, $mode);
+        $this->_path = $path;
+        $this->_mode = $mode;
+        $this->openFile();
     }
 
     public function __destruct()
     {
+        $this->closeFile();
+    }
+
+    protected function closeFile(){
         if (is_resource($this->_handle)) {
             fclose($this->_handle);
         }
+    }
+
+    protected function openFile(){
+        $this->_handle = fopen($this->_path, $this->_mode);
     }
 }
