@@ -52,16 +52,28 @@ class Checker
      * @param string $regexp
      * @param boolean $CanBeNull
      * @param string $invalidMessage
-     * @return CsvChecker $this
+     * @param string $requiredMessage
+     * @return Checker
      */
-    public function addRule($field, $regexp, $invalidMessage, $required = true)
+    public function addRule($field, $regexp, $invalidMessage, $required = true, $requiredMessage = "The field %field% is required")
     {
         $this->rules[$field] = array(
             'regexp'   => $regexp,
             'required' => $required,
             'message'  => $invalidMessage,
+            'requiredMessage'  => $requiredMessage,
         );
         return $this;
+    }
+
+    /**
+     *
+     * @param unknown_type $field
+     * @param unknown_type $invalidMessage
+     * @return Checker
+     */
+    public function addRequired($field, $requiredMessage = "The field %field% is required"){
+        return $this->addRule($field, '/^(.){1,}$/', "", true, $requiredMessage);
     }
 
     /**
@@ -127,11 +139,12 @@ class Checker
     {
         foreach( $this->rules as $field => $rule )
         {
+
             $isEmpty = empty($row[$field]);
             $isFilled = !$isEmpty;
 
             if( $rule['required'] && $isEmpty ){
-                $this->addError($lineNumber . ' @ El campo es requerido '. $field);
+                $this->addError($lineNumber . ' @ '. str_replace('%field%', '' . $field . '', $rule['requiredMessage']));
                 continue;
             }
 

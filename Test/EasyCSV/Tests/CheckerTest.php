@@ -56,6 +56,26 @@ class CheckerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @test
+     *
+     */
+    public function requireds(){
+        $reader = new Reader(dirname(__FILE__).'/mocks/filled.csv');
+        $checker = new Checker(array('name', 'email', 'phone', 'genre'));
+        $checker->addRequired('name');
+        $checker->addRequired('email');
+        $checker->addRequired('phone');
+        $checker->addRequired('genre');
+        try {
+            $checker->check($reader);
+            $this->fail("Debio de generar una exception");
+        } catch (ValidationException $e) {
+            $this->assertEquals(4, count($e->getErrors()));
+        }
+
+    }
+
+    /**
      * @return \EasyCSV\Checker
      */
     private function getChecker(){
