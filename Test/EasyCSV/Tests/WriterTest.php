@@ -41,6 +41,6 @@ class WriterTest extends \PHPUnit_Framework_TestCase
                 'column3' => '2test3'
             )
         );
-        $this->assertEquals($expected, $results);
+        $this->assertEquals($expected, array_values($results));
     }
 }

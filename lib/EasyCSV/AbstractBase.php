@@ -51,4 +51,12 @@ abstract class AbstractBase
         $this->_handle = fopen($this->_path, $this->_mode);
     }
 
+    /**
+     *
+     * @return string
+     */
+    public function getFilename(){
+        return $this->_path;
+    }
+
 }

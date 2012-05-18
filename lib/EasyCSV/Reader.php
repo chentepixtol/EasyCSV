@@ -88,6 +88,16 @@ class Reader extends AbstractBase implements \Iterator
     }
 
     /**
+     *
+     * @return array
+     */
+    public function read(){
+        $row = $this->current();
+        $this->next();
+        return $row;
+    }
+
+    /**
      * (non-PHPdoc)
      * @see Iterator::key()
      */
@@ -128,7 +138,7 @@ class Reader extends AbstractBase implements \Iterator
     {
         $data = array();
         while ($row = $this->getRow()) {
-            $data[] = $row;
+            $data[$this->getLineNumber()] = $row;
         }
         return $data;
     }
@@ -144,7 +154,7 @@ class Reader extends AbstractBase implements \Iterator
     /**
      * @return array
      */
-    protected function getHeaders(){
+    public function getHeaders(){
         return $this->_headers;
     }
 }
