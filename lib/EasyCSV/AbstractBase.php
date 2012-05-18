@@ -48,6 +48,9 @@ abstract class AbstractBase
      *
      */
     protected function openFile(){
+        if( !file_exists($this->_path) ){
+            throw new Exception("The file not exists: " . $this->_path);
+        }
         $this->_handle = fopen($this->_path, $this->_mode);
     }
 

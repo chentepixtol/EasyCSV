@@ -14,70 +14,35 @@ class Checker
      *
      * @var mixed
      */
-    private $rules = array();
+    protected $rules = array();
 
     /**
      * Errores encontrados en el archivo
      *
      * @var mixed
      */
-    private $errors = array();
+    protected $errors = array();
 
     /**
      * Indices que debe tener el archivo
      *
      * @var mixed
      */
-    private $index = array();
-
-    /**
-     * Deterina si el documento debe tener el mismo numero de columnas en todas sus filas (tomando como base el numero de filas de la primera linea)
-     *
-     * @var boolean
-     */
-    private $checkRowNumbers = false;
-
-    /**
-     * El numero de columnas que deben tener TODAS las filas (si es cero se anula)
-     *
-     * @var int
-     */
-    private $fixedColumnNumber = 0;
+    protected $index = array();
 
     /**
      *
      * @var Reader
      */
-    private $reader;
+    protected $reader;
 
     /**
      * Constructor de la clase
      *
-     * @param int $columnNumber
+     * @param array $headers
      */
-    public function __construct($columnNumber = 0)
-    {
-        $this->fixedColumnNumber = $columnNumber;
-    }
-
-    /**
-     * Guarda las reglas del archivo que se va a revisar
-     * Ejemplo:
-     * <code>
-     * <?php
-     * $CsvChecker->setRules(array('nombre'=>'^[a-zA-Z ]{5,20}$'));
-     * ?>
-     * </code>
-     * @param mixed $rules
-     * @example
-     *
-     */
-    public function setRules($rules)
-    {
-        if(! is_array($rules))
-            throw new \Exception(' Las reglas del documento deben ser enviadas como un arreglo asociativo @ ' . __LINE__);
-        $this->rules = $rules;
-
+    public function __construct(array $headers){
+        $this->setIndex($headers);
     }
 
     /**
@@ -89,40 +54,14 @@ class Checker
      * @param string $invalidMessage
      * @return CsvChecker $this
      */
-    public function setRule($field, $regexp, $CanBeNull, $invalidMessage)
+    public function addRule($field, $regexp, $invalidMessage, $required = true)
     {
         $this->rules[$field] = array(
-            'regexp' => $regexp,
-            'null' => $CanBeNull,
-            'invalid' => $invalidMessage);
-        return $this;
-    }
-
-
-    public function addRequired($field)
-    {
-        $this->rules[$field] = array(
-            'required' => true,
+            'regexp'   => $regexp,
+            'required' => $required,
+            'message'  => $invalidMessage,
         );
         return $this;
-    }
-
-    /**
-     * Genera una excepcion a algunas de las reglas establecidas para un valor dado
-     *
-     * @param string $field
-     * @param string $regexp
-     * @param array $ignoreFields
-     */
-    public function setConditionalIgnores($field, $regexp, $ignoreFields)
-    {
-        foreach ($ignoreFields as $ignoreField)
-        {
-            if(isset($this->rules[$ignoreField]))
-            {
-                $this->rules[$ignoreField]['ignore'][] = array('field'=>$field,'regexp' => $regexp);
-            }
-        }
     }
 
     /**
@@ -130,8 +69,7 @@ class Checker
      *
      * @param mixed $index
      */
-    public function setIndex($index)
-    {
+    protected function setIndex($index){
         $this->index = $index;
     }
 
@@ -140,24 +78,26 @@ class Checker
      *
      * @param string $fileName
      */
-    private function initialize(Reader $reader)
+    protected function initialize(Reader $reader)
     {
         $this->checkCsvFile($reader->getFilename());
         if( count($this->rules) === 0 ){
-            throw new \Exception(' No se puede revistar el documento sin antes haber definido reglas @ ' . __LINE__);
+            throw new Exception(' No se puede revistar el documento sin antes haber definido reglas @ ' . __LINE__);
         }
 
         $index = $reader->getHeaders();
         if( count($this->index) > 0 )
         {
             $faltan = array_diff($this->index, $index);
-            if(count($faltan)){
-                $this->setError('Se detectaron columnas faltantes en el archivo, se necesitan <strong>' . implode(', ', $this->index) . '</strong><br/><br/> y se encontraron <strong>' . implode(', ', $index) . '</strong><br/><br/> Faltando <strong>' . implode(', ', $faltan) . '</strong>');
+            if( count($faltan) ){
+                $this->addError('Se detectaron columnas faltantes en el archivo, se necesitan ' . implode(', ', $this->index) . ' y se encontraron ' . implode(', ', $index) . ' Faltando ' . implode(', ', $faltan) . '');
             }
         }
+
         $reader->rewind();
         while ( $reader->valid() ){
-            $this->applyRules($reader->read(), $reader->getLineNumber());
+            $this->applyRules($reader->current(), $reader->getLineNumber());
+            $reader->next();
         }
     }
 
@@ -170,13 +110,11 @@ class Checker
     public function check(Reader $reader)
     {
         $this->initialize($reader);
-        $e = $this->getErrors();
-        if ( $e != false )
-        {
-            throw new \Exception('Se encontraron errores en el archivo');
-        }
-
         $reader->rewind();
+
+        if ( $this->hasErrors() ){
+            throw new ValidationException("Se encontraron errores en el archivo", $this->getErrors());
+        }
     }
 
     /**
@@ -185,49 +123,21 @@ class Checker
      * @param mixed $row
      * @param int $lineNumber
      */
-    private function applyRules($row, $lineNumber)
+    protected function applyRules($row, $lineNumber)
     {
-        foreach($this->rules as $index => $rule)
+        foreach( $this->rules as $field => $rule )
         {
-            if(isset($row[$index]))
-            {
-                if(isset($rule['regexp']))
-                {
-                    if( !preg_match($rule['regexp'], $row[$index]))
-                    {
-                        if($row[$index] == '' && $rule['null'] == true)
-                        {
-                            continue;
-                        }
-                        if( isset($rule['ignore']) )
-                        {
-                            foreach ($rule['ignore'] as $ignoreRule){
-                                if( preg_match( $ignoreRule['regexp'] , $row[$ignoreRule['field']] ) ){
-                                  continue 2;
-                                }
-                            }
-                        }
+            $isEmpty = empty($row[$field]);
+            $isFilled = !$isEmpty;
 
-                        $errorLine = $lineNumber . ' @ ';
-                        if($row[$index] == ''){
-                            $row[$index] = '<strong>vacío</strong>';
-                        }
+            if( $rule['required'] && $isEmpty ){
+                $this->addError($lineNumber . ' @ El campo es requerido '. $field);
+                continue;
+            }
 
-                        $errorLine .= str_replace('%field%', '<strong>' . $index . '</strong>', str_replace('%value%', $row[$index], $rule['invalid']));
-                        $this->setError($errorLine);
-                    }
-                } else if(isset($rule['required']) && $rule['required'] == true)
-                {
-                    if( !isset($row[$index]) )
-                    {
-                        $errorLine = $lineNumber . ' @ El campo es requerido '. $index;
-                        $this->setError($errorLine);
-                    }
-                }
-            } else
-            {
-                $errorLine = $lineNumber . ' @ El campo <strong>' . $index . '</strong> no ha sido definido ';
-                $this->setError($errorLine);
+            if( $isFilled && !preg_match($rule['regexp'], $row[$field]) ){
+                $errorLine = $lineNumber . ' @ ' . str_replace('%field%', '' . $field . '', str_replace('%value%', $row[$field], $rule['message']));
+                $this->addError($errorLine);
             }
         }
     }
@@ -238,19 +148,19 @@ class Checker
      * @param string $fileName
      * @return boolean
      */
-    private function checkCsvFile($filepath)
+    protected function checkCsvFile($filepath)
     {
         if( $this->getFileExtension($filepath) != 'csv' ){
-            throw new \Exception('El archivo que selecciono no es un fichero v&aacute;lido');
+            throw new Exception('El archivo que selecciono no es un fichero v&aacute;lido');
         }
 
         if( filesize($filepath) == 0 ){
-            throw new \Exception('El archivo que selecciono no es un fichero v&aacute;lido o parece estar vacio');
+            throw new Exception('El archivo que selecciono no es un fichero v&aacute;lido o parece estar vacio');
         }
 
         $content = file_get_contents($filepath);
         if( !preg_match("/(,(.[^,]*)){1,10}/", $content) ){
-            throw new \Exception('El archivo que selecciono no es un fichero v&aacute;lido o está da&ntilde;ado');
+            throw new Exception('El archivo que selecciono no es un fichero v&aacute;lido o está da&ntilde;ado');
         }
         $content = null;
     }
@@ -261,7 +171,7 @@ class Checker
      * @param string $filepath
      * @return string
      */
-    private function getFileExtension($filepath)
+    protected function getFileExtension($filepath)
     {
         if( $filepath != "" )
         {
@@ -275,42 +185,25 @@ class Checker
      * Guarda un eror en el registro de errores
      * @param string $error
      */
-    public function setError($error)
+    protected function addError($error)
     {
-        array_push($this->errors, $error);
+        $this->errors[] = $error;
     }
 
     /**
      * @return boolean
      */
-    public function hasErrors()
-    {
-        if(count($this->errors))
-            return true;
-        else
-            return false;
+    public function hasErrors(){
+        return count($this->errors) > 0;
     }
 
     /**
      * Regresa el arreglo de errores si existen, sino regresa falso
      *
-     * @return mixed|boolean
+     * @return mixed
      */
-    public function getErrors()
-    {
-        if(count($this->errors))
-            return $this->errors;
-        else
-            return false;
-    }
-
-    /**
-     * Guarda un boleano para determinar si se debe revisar el numero de columnas en las lineas del archivo
-     *
-     * @param boolean $checkRowNumbers
-     */
-    public function setCheckRowNumbers($checkRowNumbers){
-        $this->checkRowNumbers = $checkRowNumbers;
+    public function getErrors(){
+        return $this->errors;
     }
 
 }
