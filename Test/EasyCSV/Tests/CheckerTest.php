@@ -58,22 +58,17 @@ class CheckerTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
-     *
+     * @dataProvider getRequiredChecker
      */
-    public function requireds(){
+    public function requireds($checker){
         $reader = new Reader(dirname(__FILE__).'/mocks/filled.csv');
-        $checker = new Checker(array('name', 'email', 'phone', 'genre'));
-        $checker->addRequired('name');
-        $checker->addRequired('email');
-        $checker->addRequired('phone');
-        $checker->addRequired('genre');
+
         try {
             $checker->check($reader);
             $this->fail("Debio de generar una exception");
         } catch (ValidationException $e) {
             $this->assertEquals(4, count($e->getErrors()));
         }
-
     }
 
     /**
@@ -92,6 +87,30 @@ class CheckerTest extends \PHPUnit_Framework_TestCase
         } catch (ValidationException $e) {
             $this->assertEquals(4, count($e->getErrors()));
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getRequiredChecker(){
+        $checker = new Checker(array('name', 'email', 'phone', 'genre'));
+        $checker->addRequired('name');
+        $checker->addRequired('email');
+        $checker->addRequired('phone');
+        $checker->addRequired('genre');
+
+        $checker2 = new Checker(array('name', 'email', 'phone', 'genre'));
+        $checker2->addRequireds(array('name', 'email', 'phone', 'genre'));
+
+        $checker3 = new Checker(array('name', 'email', 'phone', 'genre'));
+        $checker3->addRequireds(array(
+            'name' => 'invalid',
+            'email' => 'invalid',
+            'phone' => 'invalid',
+            'genre' => 'invalid'
+        ));
+
+        return array( array($checker), array($checker2), array($checker3));
     }
 
     /**

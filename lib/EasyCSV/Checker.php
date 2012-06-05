@@ -77,6 +77,20 @@ class Checker
     }
 
     /**
+     *
+     * @param array $array
+     */
+    public function addRequireds(array $array){
+        foreach ($array as $key => $value) {
+            if( is_string($key) ){
+                $this->addRequired($key, $value);
+            }else{
+                $this->addRequired($value);
+            }
+        }
+    }
+
+    /**
      * Guarda los indices que se buscaran en el archivo
      *
      * @param mixed $index
