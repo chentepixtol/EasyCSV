@@ -1,15 +1,5 @@
 <?php
 
-use Symfony\Component\ClassLoader\UniversalClassLoader;
+$loader = require_once 'vendor/autoload.php';
 
-require_once 'vendor/Symfony/Component/ClassLoader/UniversalClassLoader.php';
-
-set_include_path(realpath('vendor/') . PATH_SEPARATOR . get_include_path());
-
-$loader = new UniversalClassLoader();
-$loader->registerNamespaces(array(
-    'EasyCSV'        => 'lib/',
-    'EasyCSV\Tests'  => 'Test',
-));
-$loader->register();
-
+$loader->add('EasyCSV\Tests', 'Test');
