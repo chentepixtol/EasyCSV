@@ -7,14 +7,14 @@ namespace EasyCSV;
  * @author chente
  *
  */
-class RegExpRule extends BaseRule
+class CallableRule extends BaseRule
 {
 
     /**
      *
      * @var string
      */
-    private $regexp;
+    private $callable;
 
     /**
      *
@@ -23,8 +23,11 @@ class RegExpRule extends BaseRule
      * @param string $invalidMessage
      * @param string $requiredMessage
      */
-    public function __construct($regexp, $isRequired, $invalidMessage, $requiredMessage){
-        $this->regexp = $regexp;
+    public function __construct($callable, $isRequired, $invalidMessage, $requiredMessage){
+        if( !is_callable($callable) ){
+            throw new Exception("El callable no es valido");
+        }
+        $this->callable = $callable;
         parent::__construct($isRequired, $invalidMessage, $requiredMessage);
     }
 
@@ -32,7 +35,7 @@ class RegExpRule extends BaseRule
      * @return boolean
      */
     public function isValid($value){
-        return preg_match($this->regexp, $value);
+        return (boolean) call_user_func_array($this->callable, array($value));
     }
 
 }

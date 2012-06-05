@@ -55,9 +55,14 @@ class Checker
      * @param string $requiredMessage
      * @return Checker
      */
-    public function addRule($field, $regexp, $invalidMessage, $required = true, $requiredMessage = "The field %field% is required")
+    public function addRule($field, $regexpOrCallable, $invalidMessage, $required = true, $requiredMessage = "The field %field% is required")
     {
-        $this->rules[$field] = new RegExpRule($regexp, $required, $invalidMessage, $requiredMessage);
+        if( is_callable($regexpOrCallable) ){
+            $this->rules[$field] = new CallableRule($regexpOrCallable, $required, $invalidMessage, $requiredMessage);
+        }else{
+            $this->rules[$field] = new RegExpRule($regexpOrCallable, $required, $invalidMessage, $requiredMessage);
+        }
+
         return $this;
     }
 

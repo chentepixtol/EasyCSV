@@ -2,6 +2,11 @@
 
 namespace EasyCSV;
 
+/**
+ *
+ * @author chente
+ *
+ */
 class ValidationException extends Exception
 {
 

@@ -77,6 +77,24 @@ class CheckerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @test
+     */
+    public function byCallables(){
+        $reader = new Reader(dirname(__FILE__).'/mocks/filled.csv');
+        $checker = new Checker(array('name', 'email', 'phone', 'genre'));
+        $checker->addRule('name', function($value){
+            return strlen($value) > 3;
+        }, "El nombre deberia de ser mayor de 3 letras");
+
+        try {
+            $checker->check($reader);
+            $this->fail("Debio de generar una exception");
+        } catch (ValidationException $e) {
+            $this->assertEquals(4, count($e->getErrors()));
+        }
+    }
+
+    /**
      * @return \EasyCSV\Checker
      */
     private function getChecker(){
