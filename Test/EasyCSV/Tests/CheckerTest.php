@@ -10,6 +10,7 @@ use EasyCSV\Reader;
 
 class CheckerTest extends \PHPUnit_Framework_TestCase
 {
+
     /**
      * @test
      * @expectedException \EasyCSV\Exception

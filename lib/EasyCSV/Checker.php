@@ -57,12 +57,7 @@ class Checker
      */
     public function addRule($field, $regexp, $invalidMessage, $required = true, $requiredMessage = "The field %field% is required")
     {
-        $this->rules[$field] = array(
-            'regexp'   => $regexp,
-            'required' => $required,
-            'message'  => $invalidMessage,
-            'requiredMessage'  => $requiredMessage,
-        );
+        $this->rules[$field] = new RegExpRule($regexp, $required, $invalidMessage, $requiredMessage);
         return $this;
     }
 
@@ -139,18 +134,17 @@ class Checker
     {
         foreach( $this->rules as $field => $rule )
         {
-
-            $isEmpty = empty($row[$field]);
+            $value = isset($row[$field]) ? $row[$field] : null;
+            $isEmpty = empty($value);
             $isFilled = !$isEmpty;
 
-            if( $rule['required'] && $isEmpty ){
-                $this->addError($lineNumber . ' @ '. str_replace('%field%', '' . $field . '', $rule['requiredMessage']));
+            if( $rule->isRequired() && $isEmpty ){
+                $this->addError($rule->getRequiredMessage($lineNumber, $field, $value));
                 continue;
             }
 
-            if( $isFilled && !preg_match($rule['regexp'], $row[$field]) ){
-                $errorLine = $lineNumber . ' @ ' . str_replace('%field%', '' . $field . '', str_replace('%value%', $row[$field], $rule['message']));
-                $this->addError($errorLine);
+            if( $isFilled && !$rule->isValid($value) ){
+                $this->addError($rule->getErrorMessage($lineNumber, $field, $value));
             }
         }
     }
